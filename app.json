@@ -1,0 +1,271 @@
+{
+  "id": "nl.athom.ikettle",
+  "version": "1.0.0",
+  "compatibility": ">=0.1.0",
+  "name": {
+    "en": "iKettle",
+    "nl": "iKettle"
+  },
+  "description": {
+    "en": "This app lets you control your iKettle.",
+    "nl": "Met deze app kan je jou iKettle besturen."
+  },
+  "author": {
+    "name": "Robin Bolscher",
+    "email": "robin@athom.nl"
+  },
+  "permissions": [
+    "homey:manager:speech-output",
+    "homey:manager:speech-ledring",
+    "homey:manager:flow"
+  ],
+  "speech": [
+    {
+      "id": "kettle boil",
+      "importance": 0.6,
+      "synonyms": {
+        "en": [
+          "kettle on",
+          "kettle heat",
+          "kettle boil"
+        ]
+      }
+    }
+  ],
+  "drivers": [
+    {
+      "id": "ikettle",
+      "name": {
+        "en": "iKettle"
+      },
+      "class": "kettles",
+      "capabilities": [
+        "name",
+        "onoff",
+        "temperature",
+        "keepwarm",
+        "boiled",
+        "docked"
+      ],
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_kettle"
+          }
+        },
+        {
+          "id": "add_kettle",
+          "template": "add_devices"
+        }
+      ]
+    }
+  ],
+  "flow": {
+    "triggers": [
+      {
+        "id": "started",
+        "title": {
+          "en": "Started boiling",
+          "nl": "Gestart met water koken"
+        },
+        "method": "started"
+      },
+      {
+        "id": "stopped",
+        "title": {
+          "en": "Stopped boiling",
+          "nl": "Gestopt met water koken"
+        },
+        "method": "stopped"
+      },
+      {
+        "id": "docked",
+        "title": {
+          "en": "Docked",
+          "nl": "In het basisstation"
+        },
+        "method": "docked"
+      },
+      {
+        "id": "removed",
+        "title": {
+          "en": "Removed from dock",
+          "nl": "Van het basisstation gehaald"
+        },
+        "method": "removed"
+      }
+    ],
+    "conditions": [
+      {
+        "id": "boiled",
+        "title": {
+          "en": "Water is boiled",
+          "nl": "Water heeft gekookt"
+        }
+      },
+      {
+        "id": "boiling",
+        "title": {
+          "en": "Is boiling",
+          "nl": "Aan het koken"
+        }
+      },
+      {
+        "id": "docked",
+        "title": {
+          "en": "Is docked",
+          "nl": "In het basisstation"
+        }
+      }
+    ],
+    "actions": [
+      {
+        "id": "boil",
+        "title": {
+          "en": "Start boiling water",
+          "nl": "Start met water koken"
+        },
+        "args": [
+          {
+            "name": "temperature",
+            "type": "dropdown",
+            "values": [
+              {
+                "value": "100",
+                "label": {
+                  "en": "100˚ C",
+                  "nl": "100 ˚C"
+                }
+              },
+              {
+                "value": "95",
+                "label": {
+                  "en": "95˚ C",
+                  "nl": "100 ˚C"
+                }
+              },
+              {
+                "value": "80",
+                "label": {
+                  "en": "80˚ C",
+                  "nl": "100 ˚C"
+                }
+              },
+              {
+                "value": "65",
+                "label": {
+                  "en": "65 ˚C",
+                  "nl": "100 ˚C"
+                }
+              }
+            ],
+            "style": {
+              "width": "20%"
+            }
+          }
+        ]
+      },
+      {
+        "id": "off",
+        "title": {
+          "en": "Start boiling water",
+          "nl": "Stop met water koken"
+        }
+      },
+      {
+        "id": "temperature",
+        "title": {
+          "en": "Set kettle temperature",
+          "nl": "Zet temperatuur van de water koker"
+        },
+        "args": [
+          {
+            "name": "temperature",
+            "type": "dropdown",
+            "values": [
+              {
+                "value": "100",
+                "label": {
+                  "en": "100˚ C",
+                  "nl": "100 ˚C"
+                }
+              },
+              {
+                "value": "95",
+                "label": {
+                  "en": "95˚ C",
+                  "nl": "100 ˚C"
+                }
+              },
+              {
+                "value": "80",
+                "label": {
+                  "en": "80˚ C",
+                  "nl": "100 ˚C"
+                }
+              },
+              {
+                "value": "65",
+                "label": {
+                  "en": "65 ˚C",
+                  "nl": "100 ˚C"
+                }
+              }
+            ],
+            "style": {
+              "width": "20%"
+            }
+          }
+        ]
+      },
+      {
+        "id": "keepWarm",
+        "title": {
+          "en": "Keep the kettle warm",
+          "nl": "Hou de water koker warm"
+        },
+        "args": [
+          {
+            "name": "temperature",
+            "type": "dropdown",
+            "values": [
+              {
+                "value": "100",
+                "label": {
+                  "en": "100˚ C",
+                  "nl": "100 ˚C"
+                }
+              },
+              {
+                "value": "95",
+                "label": {
+                  "en": "95˚ C",
+                  "nl": "100 ˚C"
+                }
+              },
+              {
+                "value": "80",
+                "label": {
+                  "en": "80˚ C",
+                  "nl": "100 ˚C"
+                }
+              },
+              {
+                "value": "65",
+                "label": {
+                  "en": "65 ˚C",
+                  "nl": "100 ˚C"
+                }
+              }
+            ],
+            "style": {
+              "width": "20%"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
