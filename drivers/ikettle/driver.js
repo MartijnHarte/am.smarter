@@ -1,88 +1,95 @@
 var iKettle = require('ikettle.js-master');
-var Backbone = require('backbone');
 
 var kettles = [];
+var getKettle = function (device_id) {
+    for (var x = 0; x < kettles.length; x++) {
+        if (kettles[x].id === device_id) {
+            return kettles[x];
+        }
+    }
+};
 
-
-module.exports.init = function ( devices, callback ) {
+module.exports.init = function (devices, callback) {
 
     //TODO proper kettle discovery/pairing including multiple devices support
     var myKettle = new iKettle();
 
     // Find kettle on network
-    myKettle.discover(function(error, success){
-        if(error){
+    myKettle.discover(function (error, success) {
+
+        // Check for error/success
+        if (error) {
             Homey.log('Error: ' + error);
             return;
         }
-
-        Homey.log('Connected to an iKettle on ip ' + myKettle._host);
-
-        kettles [myKettle._host] = {
-            id: myKettle._host,
-            name: 'iKettle',
-            ip: myKettle._host
+        else {
+            Homey.log('Connected to an iKettle on ip ' + myKettle.kettle._host);
         }
 
-        // Update kettle state
-        myKettle.getStatus()
-
+        // Add kettle to array of found devices (for multiple devices support)
+        kettles.push({
+            name: 'iKettle' + ((kettles.length > 0) ? (' ' + kettles.length + 1) : ''),
+            ip: myKettle._host,
+            get id() {
+                return this.name + '_' + this.ip;
+            }
+        });
     });
 
     //TODO the state model functionality below can be removed once implemented by ikettle.js
     // Create myKettle state model
-    myKettle.state = new Backbone.Model({
-        "onoff": false,
-        "removed": false,
+    myKettle.state = {
+        onoff: false,
+        removed: false,
 
-        "keep-warm": false,
-        "keep-warm-time": null,
-        "keep-warm-expired": false,
+        keep_warm: false,
+        keep_warm_time: null,
+        keep_warm_expired: false,
 
-        "overheat": false,
-        "boiled": false,
-        "boiling": false,
-        "temperature": null
-    });
+        overheat: false,
+        boiled: false,
+        boiling: false,
+        temperature: null
+    };
 
     // Update iKettle state model
-    myKettle.on('off', function(){
-        iKettleState.set('onoff', false)
+    myKettle.on('off', function () {
+        myKettle.onoff = false;
 
-    }).on('removed', function() {
-        iKettleState.set('docked', false)
+    }).on('removed', function () {
+        myKettle.docked = false;
 
     }).on('overheat', function () {
-        iKettleState.set('overheat', true)
+        myKettle.overheat = true;
 
     }).on('boiled', function () {
-        iKettleState.set('boiled', true)
+        myKettle.boiled = true;
 
     }).on('keep-warm-expired', function () {
-        iKettleState.set('keep-warm-expired', true)
+        myKettle.keep_warm_expired = true;
 
     }).on('boiling', function () {
-        iKettleState.set('boiling', true)
-        iKettleState.set('onoff', true)
+        myKettle.boiling = true;
+        myKettle.onoff = true;
 
     }).on('keep-warm', function (state) {
-        iKettleState.set('keep-warm', state)
+        myKettle.keep_warm = state;
 
     }).on('temperature', function (temperature) {
-        iKettleState.set('temperature', temperature)
+        myKettle.temperature = temperature;
 
     }).on('keep-warm-time', function (time) {
-        iKettleState.set('keep-warm-time', time)
+        myKettle.keep_warm_time = time;
 
     });
 }
 
 module.exports.pair = {
-    list_devices: function ( callback, emit, data){
+    list_devices: function (callback, emit, data) {
         //TODO implement listing devices
-        callback (kettles);
+        callback(kettles);
     },
-    add_device: function ( ) {
+    add_device: function () {
         //TODO implement add device
     }
 }
@@ -105,7 +112,7 @@ module.exports.capabilities = {
         get: function (device_data, callback) {
 
             // Read on/off state from kettle state model
-            return myKettle.state.get('onoff')
+            return myKettle.state.onoff
         },
         set: function (device_data, onoff, callback) {
 
@@ -126,7 +133,7 @@ module.exports.capabilities = {
         get: function (device_data, callback) {
 
             // Read temperature state from kettle state model
-            return myKettle.state.get('temperature')
+            return myKettle.state.temperature
         },
         set: function (device_data, temperature, callback) {
             myKettle.setTemperature(temperature, callback)
@@ -136,8 +143,8 @@ module.exports.capabilities = {
     keepwarm: {
         get: function (device_data, callback) {
             return {
-                "keep-warm": myKettle.state.get('keep-warm'),
-                "keep-warm-time": myKettle.state.get('keep-warm-time')
+                keep_warm: myKettle.state.keep_warm,
+                keep_warm_time: myKettle.state.keep_warm_time
             }
 
         },
@@ -154,13 +161,15 @@ module.exports.capabilities = {
         get: function (device_data, callback) {
 
             // Read temperature state from kettle state model
-            return myKettle.state.get('boiled')
+            return myKettle.state.boiled
         }
     },
 
     docked: {
         get: function (device_data, callback) {
-            return myKettle.state.get('docked')
+
+            // Return docked state
+            return myKettle.state.docked
         }
     }
 }

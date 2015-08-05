@@ -38,7 +38,7 @@
       "name": {
         "en": "iKettle"
       },
-      "class": "kettles",
+      "class": "kettle",
       "capabilities": [
         "name",
         "onoff",
