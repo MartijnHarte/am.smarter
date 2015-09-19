@@ -1,3 +1,3 @@
 ### iKettle Homey app
 
-This is a Homey app that enables you to control an iKettle.
+This app for Homey lets you control you iKettle! You can switch it on and off, set a temperature, or keep the water warm!
