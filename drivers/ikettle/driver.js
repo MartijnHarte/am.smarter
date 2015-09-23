@@ -1,19 +1,20 @@
 //TODO implement keepWarmTime
-//TODO add and keep track of states in kettles for use by capabilities
-//TODO proper kettle discovery/pairing including multiple devices support
+//TODO implement multiple devices
 
 /**
  * Import iKettle library
  */
 var iKettle = require( 'ikettle.js-master' );
+var _ = require( 'underscore' );
 
 /**
- * Global variables to keep track of added
+ * Global variables to keep track of found
  * and installed kettles
  * @type {Array}
  */
 var kettles = [];
 var temp_kettles = [];
+var myKettle = null;
 
 /**
  * Init that adds devices already present, and starts searching for
@@ -21,31 +22,47 @@ var temp_kettles = [];
  * @param devices
  * @param callback
  */
-module.exports.init = function ( devices, callback ) {
+module.exports.init = function ( devices_data, callback ) {
 
-    // Initially add devices already installed
-    devices.forEach( function ( device ) {
-        kettles.push( device );
-    } );
+    // Make sure no data is left
+    temp_kettles = [];
 
-    // Instatiate new iKettle object
-    var myKettle = new iKettle();
+    // Instantiate new iKettle object
+    myKettle = new iKettle();
 
     // Find kettle on network
     myKettle.discover( function ( error, success ) {
 
         // Check for success
         if ( success ) {
-            Homey.log( 'Connected to an iKettle on ip ' + myKettle.kettle._host );
+            var id = 'iKettle' + ((temp_kettles.length > 0) ? (' ' + temp_kettles.length + 1) : '') + myKettle.kettle._host;
+
+            // Check if device was installed before
+            var devices = (_.findWhere(devices_data, {id: id})) ? kettles : temp_kettles;
 
             // Add kettle to array of found devices (for multiple devices support)
-            temp_kettles.push( {
-                name: 'iKettle' + ((temp_kettles.length > 0) ? (' ' + temp_kettles.length + 1) : ''),
+            devices.push( {
+                name: 'iKettle' + ((devices.length > 0) ? (' ' + devices.length + 1) : ''),
                 data: {
-                    id: 'iKettle' + ((temp_kettles.length > 0) ? (' ' + temp_kettles.length + 1) : '') + myKettle._host,
-                    kettle: myKettle
+                    id: id,
+                    socket: myKettle,
+
+                    onoff: false,
+                    removed: false,
+
+                    keep_warm: false,
+                    keep_warm_time: null,
+                    keep_warm_expired: false,
+
+                    overheat: false,
+                    boiled: false,
+                    boiling: false,
+                    temperature: null
                 }
             } );
+
+            // Make sure incoming changes are registered
+            updateKettleData( getKettle( id, devices ) );
         }
     } );
 
@@ -60,14 +77,25 @@ module.exports.pair = {
 
     list_devices: function ( callback ) {
 
+        // Construct list without device data
+        var list_kettles = [];
+        temp_kettles.forEach( function ( kettle ) {
+            list_kettles.push( {
+                data: {
+                    id: kettle.data.id
+                },
+                name: kettle.name
+            } );
+        } );
+
         // List available kettles
-        callback( temp_kettles );
+        callback( list_kettles );
     },
 
     add_device: function ( callback, emit, device ) {
 
         // Store device as installed
-        kettles.push( device );
+        kettles.push( getKettle( device.data.id, temp_kettles ) );
     }
 };
 
@@ -90,14 +118,16 @@ module.exports.capabilities = {
         set: function ( device_data, onoff, callback ) {
             if ( device_data instanceof Error ) return callback( device_data );
 
-            if ( onoff ) {
+            // Get kettle
+            var kettle = getKettle( device_data.id );
 
+            if ( onoff ) {
                 // Turn on
-                device_data.kettle.boil();
+                kettle.data.socket.boil();
             }
             else {
                 // Turn off
-                device_data.kettle.off();
+                kettle.data.socket.off();
             }
 
             if ( callback ) callback( onoff );
@@ -117,25 +147,36 @@ module.exports.capabilities = {
         set: function ( device_data, temperature, callback ) {
             if ( device_data instanceof Error ) return callback( device_data );
 
-            //TODO map temperature to nearest matching temp iKettle supports
-            device_data.kettle.setTemperature( temperature, callback );
+            // Get kettle
+            var kettle = getKettle( device_data.id );
+
+            // Get closest temperature match
+            var temperature_options = [65, 80, 90, 100];
+            var closest_temp = temperature_options.reduce(function (prev, curr) {
+                return (Math.abs(curr - temperature) < Math.abs(prev - temperature) ? curr : prev);
+            });
+
+            kettle.data.socket.setTemperature( closest_temp, callback );
         }
     },
 
-    keepwarm: {
+    keep_warm: {
         get: function ( device_data, callback ) {
             if ( device_data instanceof Error ) return callback( device_data );
 
             // Get kettle
             var kettle = getKettle( device_data.id );
 
-            // Return keepwarm state from kettle
-            if ( callback ) callback( kettle.data.keepwarm );
+            // Return keep_warm state from kettle
+            if ( callback ) callback( kettle.data.keep_warm );
         },
-        set: function ( device_data, keepwarm, callback ) {
+        set: function ( device_data, keep_warm, callback ) {
             if ( device_data instanceof Error ) return callback( device_data );
 
-            device_data.kettle.keepWarm( callback );
+            // Get kettle
+            var kettle = getKettle( device_data.id );
+
+            kettle.data.socket.keepWarm( callback );
 
             if ( callback ) callback( time );
         }
@@ -167,15 +208,54 @@ module.exports.capabilities = {
 };
 
 /**
+ * This function makes sure the internally stored data of a device
+ * remains up to date with the devices' state
+ * @param device
+ */
+var updateKettleData = function ( device ) {
+
+    // Update data
+    device.data.socket.on( 'off', function () {
+        device.data.onoff = false;
+
+    } ).on( 'removed', function () {
+        device.data.docked = false;
+
+    } ).on( 'overheat', function () {
+        device.data.overheat = true;
+
+    } ).on( 'boiled', function () {
+        device.data.boiled = true;
+
+    } ).on( 'keep-warm-expired', function () {
+        device.data.keep_warm_expired = true;
+
+    } ).on( 'boiling', function () {
+        device.data.boiling = true;
+        device.data.onoff = true;
+
+    } ).on( 'keep-warm', function ( state ) {
+        device.data.keep_warm = state;
+
+    } ).on( 'temperature', function ( temperature ) {
+        device.data.temperature = temperature;
+
+    } ).on( 'keep-warm-time', function ( time ) {
+        device.data.keep_warm_time = time;
+    } );
+};
+
+/**
  * Util function that gets the correct iKettle from the kettles
  * array by its device_id
  * @param device_id
  * @returns {*}
  */
-var getKettle = function ( device_id ) {
-    for ( var x = 0; x < kettles.length; x++ ) {
-        if ( kettles[ x ].data.id === device_id ) {
-            return kettles[ x ];
+var getKettle = function ( device_id, list ) {
+    var devices = list ? list : kettles;
+    for ( var x = 0; x < devices.length; x++ ) {
+        if ( devices[ x ].data.id === device_id ) {
+            return devices[ x ];
         }
     }
 };

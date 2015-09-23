@@ -37,7 +37,7 @@
         "name",
         "onoff",
         "temperature",
-        "keepwarm",
+        "keep_warm",
         "boiled",
         "docked"
       ],
