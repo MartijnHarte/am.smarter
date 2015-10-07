@@ -38,7 +38,7 @@ module.exports.init = function ( devices_data, callback ) {
             var id = 'iKettle' + ((temp_kettles.length > 0) ? (' ' + temp_kettles.length + 1) : '') + myKettle.kettle._host;
 
             // Check if device was installed before
-            var devices = (_.findWhere(devices_data, {id: id})) ? kettles : temp_kettles;
+            var devices = (_.findWhere( devices_data, { id: id } )) ? kettles : temp_kettles;
 
             // Add kettle to array of found devices (for multiple devices support)
             devices.push( {
@@ -113,7 +113,7 @@ module.exports.capabilities = {
             var kettle = getKettle( device_data.id );
 
             // Return on/off state from kettle
-            if ( callback ) callback( kettle.data.onoff );
+            if ( callback ) callback( null, kettle.data.onoff );
         },
         set: function ( device_data, onoff, callback ) {
             if ( device_data instanceof Error ) return callback( device_data );
@@ -130,7 +130,7 @@ module.exports.capabilities = {
                 kettle.data.socket.off();
             }
 
-            if ( callback ) callback( onoff );
+            if ( callback ) callback( null, onoff );
         }
     },
 
@@ -142,7 +142,7 @@ module.exports.capabilities = {
             var kettle = getKettle( device_data.id );
 
             // Return temperature state from kettle
-            if ( callback ) callback( kettle.data.temperature );
+            if ( callback ) callback( null, kettle.data.temperature );
         },
         set: function ( device_data, temperature, callback ) {
             if ( device_data instanceof Error ) return callback( device_data );
@@ -151,12 +151,14 @@ module.exports.capabilities = {
             var kettle = getKettle( device_data.id );
 
             // Get closest temperature match
-            var temperature_options = [65, 80, 90, 100];
-            var closest_temp = temperature_options.reduce(function (prev, curr) {
-                return (Math.abs(curr - temperature) < Math.abs(prev - temperature) ? curr : prev);
-            });
+            var temperature_options = [ 65, 80, 90, 100 ];
+            var closest_temp = temperature_options.reduce( function ( prev, curr ) {
+                return (Math.abs( curr - temperature ) < Math.abs( prev - temperature ) ? curr : prev);
+            } );
 
-            kettle.data.socket.setTemperature( closest_temp, callback );
+            kettle.data.socket.setTemperature( closest_temp, function ( error ) {
+                callback( error, closest_temp );
+            } );
         }
     },
 
@@ -168,7 +170,7 @@ module.exports.capabilities = {
             var kettle = getKettle( device_data.id );
 
             // Return keep_warm state from kettle
-            if ( callback ) callback( kettle.data.keep_warm );
+            if ( callback ) callback( null, kettle.data.keep_warm );
         },
         set: function ( device_data, keep_warm, callback ) {
             if ( device_data instanceof Error ) return callback( device_data );
@@ -176,9 +178,9 @@ module.exports.capabilities = {
             // Get kettle
             var kettle = getKettle( device_data.id );
 
-            kettle.data.socket.keepWarm( callback );
-
-            if ( callback ) callback( time );
+            kettle.data.socket.keepWarm( function ( error ) {
+                callback( error, keep_warm );
+            } );
         }
     },
 
@@ -190,7 +192,7 @@ module.exports.capabilities = {
             var kettle = getKettle( device_data.id );
 
             // Return temperature state from kettle
-            if ( callback ) callback( kettle.data.boiled );
+            if ( callback ) callback( null, kettle.data.boiled );
         }
     },
 
@@ -202,7 +204,7 @@ module.exports.capabilities = {
             var kettle = getKettle( device_data.id );
 
             // Return docked state from kettle
-            if ( callback ) callback( kettle.data.docked );
+            if ( callback ) callback( null, kettle.data.docked );
         }
     }
 };
