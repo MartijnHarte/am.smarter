@@ -34,12 +34,10 @@
       },
       "class": "kettle",
       "capabilities": [
-        "name",
         "onoff",
         "temperature",
         "keep_warm",
-        "boiled",
-        "docked"
+        "boiled"
       ],
       "pair": [
         {
@@ -57,5 +55,72 @@
     }
   ],
   "flow": {
+    "triggers": [
+      {
+        "id": "kettle_has_boiled",
+        "title": {
+          "en": "Kettle has boiled",
+          "nl": "Water heeft gekookt"
+        },
+        "args": [
+          {
+            "name": "which_kettle",
+            "type": "device",
+            "placeholder": {
+              "en": "Select iKettle",
+              "nl": "Selecteer iKettle"
+            }
+          }
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "keep_warm_time",
+        "title": {
+          "en": "Keep water warm for",
+          "nl": "Houd water warm voor"
+        },
+        "args": [
+          {
+            "name": "which_kettle",
+            "type": "device",
+            "style": {"width": "60%"},
+            "placeholder": {
+              "en": "Select iKettle",
+              "nl": "Selecteer iKettle"
+            }
+          },
+          {
+            "name": "keep_warm_time",
+            "type": "dropdown",
+            "style": {"width": "40%"},
+            "values": [
+              {
+                "value": "5",
+                "label": {
+                  "en": "5 minutes",
+                  "nl": "5 minuten"
+                }
+              },
+              {
+                "value": "10",
+                "label": {
+                  "en": "10 minutes",
+                  "nl": "10 minuten"
+                }
+              },
+              {
+                "value": "20",
+                "label": {
+                  "en": "20 minutes",
+                  "nl": "20 minuten"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 }

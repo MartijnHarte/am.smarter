@@ -1,10 +1,10 @@
-//TODO implement keepWarmTime
+//TODO implement custom capabilites and flow cards and realtime
 //TODO implement multiple devices
 
 /**
  * Import iKettle library
  */
-var iKettle = require( 'ikettle.js-master' );
+var iKettle = require( 'ikettle.js' );
 var _ = require( 'underscore' );
 
 /**
@@ -17,7 +17,7 @@ var temp_kettles = [];
 var myKettle = null;
 
 /**
- * Init that adds devices already present, and starts searching for
+ * Init function that adds devices already present, and starts searching for
  * new kettles
  * @param devices
  * @param callback
@@ -34,7 +34,7 @@ module.exports.init = function ( devices_data, callback ) {
     myKettle.discover( function ( error, success ) {
 
         // Check for success
-        if ( success ) {
+        if ( !error && success ) {
             var id = 'iKettle' + ((temp_kettles.length > 0) ? (' ' + temp_kettles.length + 1) : '') + myKettle.kettle._host;
 
             // Check if device was installed before
@@ -67,7 +67,7 @@ module.exports.init = function ( devices_data, callback ) {
     } );
 
     // Ready
-    callback( true );
+    if ( typeof callback === "function" ) callback( true );
 };
 
 /**
@@ -89,13 +89,25 @@ module.exports.pair = {
         } );
 
         // List available kettles
-        callback( list_kettles );
+        if ( typeof callback === "function" )callback( list_kettles );
     },
 
     add_device: function ( callback, emit, device ) {
 
-        // Store device as installed
-        kettles.push( getKettle( device.data.id, temp_kettles ) );
+        // Get kettle to be added
+        var new_kettle = getKettle( device.data.id, temp_kettles );
+
+        // If device found
+        if ( new_kettle ) {
+
+            // Store device as installed
+            kettles.push( new_kettle );
+        }
+        else {
+
+            // Return an error
+            return throwError( callback );
+        }
     }
 };
 
@@ -107,104 +119,170 @@ module.exports.capabilities = {
 
     onoff: {
         get: function ( device_data, callback ) {
-            if ( device_data instanceof Error ) return callback( device_data );
+            if ( device_data instanceof Error || !device_data.id ) return callback( device_data );
 
             // Get kettle
             var kettle = getKettle( device_data.id );
 
-            // Return on/off state from kettle
-            if ( callback ) callback( null, kettle.data.onoff );
-        },
-        set: function ( device_data, onoff, callback ) {
-            if ( device_data instanceof Error ) return callback( device_data );
+            // Check for kettle
+            if ( kettle ) {
 
-            // Get kettle
-            var kettle = getKettle( device_data.id );
-
-            if ( onoff ) {
-                // Turn on
-                kettle.data.socket.boil();
+                // Return on/off state from kettle
+                if ( typeof callback === "function" ) callback( null, kettle.data.onoff );
             }
             else {
-                // Turn off
-                kettle.data.socket.off();
-            }
 
-            if ( callback ) callback( null, onoff );
+                // Throw error
+                return throwError( callback );
+            }
+        },
+        set: function ( device_data, onoff, callback ) {
+            if ( device_data instanceof Error || !device_data.id ) return callback( device_data );
+
+            // Get kettle
+            var kettle = getKettle( device_data.id );
+
+            // Check for kettle
+            if ( kettle ) {
+
+                if ( onoff ) {
+
+                    // Turn on
+                    kettle.data.socket.boil();
+                }
+                else {
+
+                    // Turn off
+                    kettle.data.socket.off();
+                }
+
+                // Return success
+                if ( typeof callback === "function" ) callback( null, onoff );
+            }
+            else {
+
+                // Throw error
+                return throwError( callback );
+            }
         }
     },
 
     temperature: {
         get: function ( device_data, callback ) {
-            if ( device_data instanceof Error ) return callback( device_data );
+            if ( device_data instanceof Error || !device_data.id ) return callback( device_data );
 
             // Get kettle
             var kettle = getKettle( device_data.id );
 
-            // Return temperature state from kettle
-            if ( callback ) callback( null, kettle.data.temperature );
+            // Check for kettle
+            if ( kettle ) {
+
+                // Return temperature state from kettle
+                if ( typeof callback === "function" ) callback( null, kettle.data.temperature );
+            }
+            else {
+
+                // Throw error
+                return throwError( callback );
+            }
         },
         set: function ( device_data, temperature, callback ) {
-            if ( device_data instanceof Error ) return callback( device_data );
+            if ( device_data instanceof Error || !device_data.id ) return callback( device_data );
 
             // Get kettle
             var kettle = getKettle( device_data.id );
 
-            // Get closest temperature match
-            var temperature_options = [ 65, 80, 90, 100 ];
-            var closest_temp = temperature_options.reduce( function ( prev, curr ) {
-                return (Math.abs( curr - temperature ) < Math.abs( prev - temperature ) ? curr : prev);
-            } );
+            // Check for kettle
+            if ( kettle ) {
 
-            kettle.data.socket.setTemperature( closest_temp, function ( error ) {
-                callback( error, closest_temp );
-            } );
+                // Get closest temperature match
+                var temperature_options = [ 65, 80, 90, 100 ];
+                var closest_temp = temperature_options.reduce( function ( prev, curr ) {
+                    return (Math.abs( curr - temperature ) < Math.abs( prev - temperature ) ? curr : prev);
+                } );
+
+                kettle.data.socket.setTemperature( closest_temp, function ( error ) {
+                    if ( typeof callback === "function" ) callback( error, closest_temp );
+                } );
+            }
+            else {
+
+                // Throw error
+                return throwError( callback );
+            }
         }
     },
 
     keep_warm: {
         get: function ( device_data, callback ) {
-            if ( device_data instanceof Error ) return callback( device_data );
+            if ( device_data instanceof Error || !device_data.id ) return callback( device_data );
 
             // Get kettle
             var kettle = getKettle( device_data.id );
 
-            // Return keep_warm state from kettle
-            if ( callback ) callback( null, kettle.data.keep_warm );
+            // Check for kettle
+            if ( kettle ) {
+
+                // Return keep_warm state from kettle
+                if ( typeof callback === "function" ) callback( null, kettle.data.keep_warm );
+            }
+            else {
+
+                // Throw error
+                return throwError( callback );
+            }
         },
         set: function ( device_data, keep_warm, callback ) {
-            if ( device_data instanceof Error ) return callback( device_data );
+            if ( device_data instanceof Error || !device_data.id ) return callback( device_data );
 
             // Get kettle
             var kettle = getKettle( device_data.id );
 
-            kettle.data.socket.keepWarm( function ( error ) {
-                callback( error, keep_warm );
-            } );
+            // Check for kettle
+            if ( kettle && keep_warm ) {
+
+                // Turning keep warm on/off
+                if ( keep_warm.onoff ) {
+
+                    // Turn on keep warm
+                    kettle.data.socket.setKeepWarmTime( (keep_warm.time) ? keep_warm.time : 20, function ( error ) {
+                        if ( typeof callback === "function" ) callback( error, keep_warm.onoff );
+                    } );
+                }
+                else {
+
+                    // Turn off
+                    kettle.data.socket.off( function ( error ) {
+                        if ( typeof callback === "function" ) callback( error, keep_warm.onoff );
+                    } );
+                }
+            }
+            else {
+
+                // Throw error
+                return throwError( callback );
+            }
         }
     },
 
     boiled: {
         get: function ( device_data, callback ) {
-            if ( device_data instanceof Error ) return callback( device_data );
+            if ( device_data instanceof Error || !device_data.id ) return callback( device_data );
 
             // Get kettle
             var kettle = getKettle( device_data.id );
 
-            // Return temperature state from kettle
-            if ( callback ) callback( null, kettle.data.boiled );
-        }
-    },
+            // Check for kettle
+            if ( kettle ) {
 
-    docked: {
-        get: function ( device_data, callback ) {
-            if ( device_data instanceof Error ) return callback( device_data );
+                // Return temperature state from kettle
+                if ( typeof callback === "function" ) callback( null, kettle.data.boiled );
+            }
+            else {
 
-            // Get kettle
-            var kettle = getKettle( device_data.id );
-
-            // Return docked state from kettle
-            if ( callback ) callback( null, kettle.data.docked );
+                // Throw error
+                return throwError( callback );
+            }
         }
     }
 };
@@ -214,46 +292,60 @@ module.exports.capabilities = {
  * remains up to date with the devices' state
  * @param device
  */
-var updateKettleData = function ( device ) {
+function updateKettleData ( device ) {
 
     // Update data
-    device.data.socket.on( 'off', function () {
-        device.data.onoff = false;
+    if ( device ) {
+        device.data.socket.on( 'off', function () {
+            device.data.onoff = false;
 
-    } ).on( 'removed', function () {
-        device.data.docked = false;
+        } ).on( 'removed', function () {
 
-    } ).on( 'overheat', function () {
-        device.data.overheat = true;
+            // Reset data
+            device.data.boiled = false;
+            device.data.overheat = false;
+            device.data.keep_warm_expired = false;
+            device.data.boiling = false;
+            device.data.keep_warm = false;
 
-    } ).on( 'boiled', function () {
-        device.data.boiled = true;
+        } ).on( 'overheat', function () {
+            device.data.overheat = true;
 
-    } ).on( 'keep-warm-expired', function () {
-        device.data.keep_warm_expired = true;
+        } ).on( 'boiled', function () {
+            device.data.boiled = true;
 
-    } ).on( 'boiling', function () {
-        device.data.boiling = true;
-        device.data.onoff = true;
+            // Boiling done
+            module.exports.realtime( device.data, 'boiled', true );
 
-    } ).on( 'keep-warm', function ( state ) {
-        device.data.keep_warm = state;
+        } ).on( 'keep-warm-expired', function () {
+            device.data.keep_warm_expired = true;
 
-    } ).on( 'temperature', function ( temperature ) {
-        device.data.temperature = temperature;
+            // Keep warm done
+            module.exports.realtime( device.data, 'keep_warm', false );
 
-    } ).on( 'keep-warm-time', function ( time ) {
-        device.data.keep_warm_time = time;
-    } );
+        } ).on( 'boiling', function () {
+            device.data.boiling = true;
+            device.data.onoff = true;
+
+        } ).on( 'keep-warm', function ( state ) {
+            device.data.keep_warm = state;
+
+        } ).on( 'temperature', function ( temperature ) {
+            device.data.temperature = temperature;
+
+        } ).on( 'keep-warm-time', function ( time ) {
+            device.data.keep_warm_time = time;
+        } );
+    }
 };
 
 /**
  * Util function that gets the correct iKettle from the kettles
  * array by its device_id
  * @param device_id
- * @returns {*}
+ * @returns {Device}
  */
-var getKettle = function ( device_id, list ) {
+function getKettle ( device_id, list ) {
     var devices = list ? list : kettles;
     for ( var x = 0; x < devices.length; x++ ) {
         if ( devices[ x ].data.id === device_id ) {
@@ -261,3 +353,21 @@ var getKettle = function ( device_id, list ) {
         }
     }
 };
+
+/**
+ * Handles throwing a proper error
+ * @param callback
+ * @returns {Error}
+ */
+function throwError ( callback ) {
+
+    // Check for valid callback
+    if ( typeof callback === "function" ) {
+
+        // Return error
+        return callback( new Error( 'Could not find kettle' ) );
+    }
+    else {
+        return new Error( 'Could not find kettle' );
+    }
+}
