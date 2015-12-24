@@ -1,6 +1,6 @@
 {
   "id": "am.smarter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "compatibility": ">=0.1.0",
   "name": {
     "en": "Smarter iKettle",
@@ -16,8 +16,8 @@
     "small": "assets/images/small.jpg"
   },
   "author": {
-    "name": "Robin Bolscher",
-    "email": "robin@athom.nl"
+    "name": "Athom B.V.",
+    "email": "info@athom.com"
   },
   "speech": [
   ],
