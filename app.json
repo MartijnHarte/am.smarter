@@ -37,7 +37,8 @@
         "onoff",
         "temperature",
         "keep_warm",
-        "boiled"
+        "boiled",
+        "removed"
       ],
       "pair": [
         {
@@ -57,14 +58,67 @@
   "flow": {
     "triggers": [
       {
-        "id": "kettle_has_boiled",
+        "id": "boiled",
         "title": {
           "en": "Kettle has boiled",
           "nl": "Water heeft gekookt"
         },
         "args": [
           {
-            "name": "which_kettle",
+            "name": "device",
+            "type": "device",
+            "placeholder": {
+              "en": "Select iKettle",
+              "nl": "Selecteer iKettle"
+            }
+          }
+        ]
+      },
+      {
+        "id": "removed",
+        "title": {
+          "en": "Kettle has been undocked",
+          "nl": "Waterkoker van dock gehaald"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "placeholder": {
+              "en": "Select iKettle",
+              "nl": "Selecteer iKettle"
+            }
+          }
+        ]
+      },
+      {
+        "id": "keep_warm_expired",
+        "title": {
+          "en": "Keep warm time expired",
+          "nl": "Houd warm tijd voorbij"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "placeholder": {
+              "en": "Select iKettle",
+              "nl": "Selecteer iKettle"
+            }
+          }
+        ]
+      }
+    ],
+    "conditions": [
+      {
+        "id": "keep_warm",
+        "title": {
+          "en": "Is keeping warm",
+          "nl": "Is aan het warm houden"
+        },
+        "args": [
+          {
+            "name": "device",
             "type": "device",
             "placeholder": {
               "en": "Select iKettle",
@@ -76,45 +130,79 @@
     ],
     "actions": [
       {
-        "id": "keep_warm_time",
+        "id": "onoff",
         "title": {
-          "en": "Keep water warm for",
-          "nl": "Houd water warm voor"
+          "en": "Turn on water boiler",
+          "nl": "Zet waterkoker aan"
         },
         "args": [
           {
-            "name": "which_kettle",
+            "name": "device",
             "type": "device",
-            "style": {"width": "60%"},
+            "style": {
+              "width": "50%"
+            },
             "placeholder": {
               "en": "Select iKettle",
               "nl": "Selecteer iKettle"
             }
           },
           {
-            "name": "keep_warm_time",
+            "name": "temperature",
             "type": "dropdown",
-            "style": {"width": "40%"},
+            "style": {
+              "width": "25%"
+            },
             "values": [
               {
-                "value": "5",
+                "id": "65",
                 "label": {
-                  "en": "5 minutes",
-                  "nl": "5 minuten"
+                  "en": "65 °C",
+                  "nl": "65 °C"
                 }
               },
               {
-                "value": "10",
+                "id": "80",
                 "label": {
-                  "en": "10 minutes",
-                  "nl": "10 minuten"
+                  "en": "80 °C",
+                  "nl": "80 °C"
                 }
               },
               {
-                "value": "20",
+                "id": "95",
                 "label": {
-                  "en": "20 minutes",
-                  "nl": "20 minuten"
+                  "en": "95 °C",
+                  "nl": "95 °C"
+                }
+              },
+              {
+                "id": "100",
+                "label": {
+                  "en": "100 °C",
+                  "nl": "100 °C"
+                }
+              }
+            ]
+          },
+          {
+            "name": "keep_warm",
+            "type": "dropdown",
+            "style": {
+              "width": "25%"
+            },
+            "values": [
+              {
+                "id": false,
+                "label": {
+                  "en": "Don't keep warm",
+                  "nl": "Houd niet warm"
+                }
+              },
+              {
+                "id": true,
+                "label": {
+                  "en": "Keep warm afterwards",
+                  "nl": "Houd warm achteraf"
                 }
               }
             ]
