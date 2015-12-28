@@ -27,8 +27,8 @@ module.exports.init = function (devices_data, callback) {
 	temp_kettles = [];
 
 	// Store pre-installed devices
-	for(var x = 0; x < devices_data.length; x++){
-		preInstalledKettles.push({data:{id:devices_data[x].id}});
+	for (var x = 0; x < devices_data.length; x++) {
+		preInstalledKettles.push({data: {id: devices_data[x].id}});
 	}
 
 	// Instantiate new iKettle object
@@ -289,34 +289,35 @@ function searchForKettles(callback) {
 		discoverSocket.on('found_device', function (kettle) {
 			var id = generateDeviceID(kettle.kettle._host, "null");
 
-			var foundKettle = _.filter(preInstalledKettles, function(kettle){ return kettle.data.id == id; });
+			var foundKettle = _.filter(preInstalledKettles, function (kettle) { return kettle.data.id == id; });
+
 			// Check if device was installed before
-				var devices = (foundKettle) ? kettles : temp_kettles;
-				// Add kettle to array of found devices (for multiple devices support)
-				devices.push({
-					name: 'iKettle' + ((devices.length > 0) ? (' ' + devices.length + 1) : ''),
-					data: {
-						id:     id,
-						socket: kettle.kettle,
-						kettle: kettle,
+			var devices = (foundKettle) ? kettles : temp_kettles;
 
-						onoff:   false,
-						removed: false,
+			// Add kettle to array of found devices (for multiple devices support)
+			devices.push({
+				name: 'iKettle' + ((devices.length > 0) ? (' ' + devices.length + 1) : ''),
+				data: {
+					id: id,
+					socket: kettle.kettle,
+					kettle: kettle,
 
-						keep_warm:         false,
-						keep_warm_time:    null,
-						keep_warm_expired: false,
+					onoff: false,
+					removed: false,
 
-						overheat:    false,
-						boiled:      false,
-						boiling:     false,
-						temperature: null
-					}
-				});
+					keep_warm: false,
+					keep_warm_time: null,
+					keep_warm_expired: false,
 
-				// Make sure incoming changes are registered
-				updateKettleData(getKettle(id, devices));
-			//}
+					overheat: false,
+					boiled: false,
+					boiling: false,
+					temperature: null
+				}
+			});
+
+			// Make sure incoming changes are registered
+			updateKettleData(getKettle(id, devices));
 		});
 		discoverSocket.on('done', function () {
 			if (callback) callback();
@@ -347,7 +348,7 @@ function updateKettleData(device) {
 			device.data.removed = true;
 
 			// Removed kettle from dock
-			module.exports.realtime({id:device.data.id}, 'removed', true);
+			module.exports.realtime({id: device.data.id}, 'removed', true);
 
 		}).on('overheat', function () {
 			device.data.overheat = true;
@@ -356,13 +357,13 @@ function updateKettleData(device) {
 			device.data.boiled = true;
 
 			// Boiling done
-			module.exports.realtime({data:{id:device.data.id}}, 'boiled', true);
+			module.exports.realtime({data: {id: device.data.id}}, 'boiled', true);
 
 		}).on('keep-warm-expired', function () {
 			device.data.keep_warm_expired = true;
 
 			// Keep warm done
-			module.exports.realtime({data:{id:device.data.id}}, 'keep_warm', false);
+			module.exports.realtime({data: {id: device.data.id}}, 'keep_warm', false);
 
 		}).on('boiling', function () {
 			device.data.boiling = true;
@@ -372,7 +373,7 @@ function updateKettleData(device) {
 			device.data.keep_warm = state;
 
 			// Keep warm done
-			module.exports.realtime({data:{id:device.data.id}}, 'keep_warm', true);
+			module.exports.realtime({data: {id: device.data.id}}, 'keep_warm', true);
 
 		}).on('temperature', function (temperature) {
 			device.data.temperature = temperature;
