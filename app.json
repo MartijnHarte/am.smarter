@@ -35,7 +35,7 @@
       "class": "kettle",
       "capabilities": [
         "onoff",
-        "temperature",
+        "target_temperature",
         "keep_warm",
         "boiled",
         "removed"
@@ -62,51 +62,21 @@
         "title": {
           "en": "Kettle has boiled",
           "nl": "Water heeft gekookt"
-        },
-        "args": [
-          {
-            "name": "device",
-            "type": "device",
-            "placeholder": {
-              "en": "Select iKettle",
-              "nl": "Selecteer iKettle"
-            }
-          }
-        ]
+        }
       },
       {
         "id": "removed",
         "title": {
-          "en": "Kettle has been undocked",
-          "nl": "Waterkoker van dock gehaald"
-        },
-        "args": [
-          {
-            "name": "device",
-            "type": "device",
-            "placeholder": {
-              "en": "Select iKettle",
-              "nl": "Selecteer iKettle"
-            }
-          }
-        ]
+          "en": "Kettle has been undocked while heating",
+          "nl": "Waterkoker tijdens verwarmen van dock gehaald"
+        }
       },
       {
         "id": "keep_warm_expired",
         "title": {
           "en": "Keep warm time expired",
           "nl": "Houd warm tijd voorbij"
-        },
-        "args": [
-          {
-            "name": "device",
-            "type": "device",
-            "placeholder": {
-              "en": "Select iKettle",
-              "nl": "Selecteer iKettle"
-            }
-          }
-        ]
+        }
       }
     ],
     "conditions": [

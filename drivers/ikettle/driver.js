@@ -81,6 +81,8 @@ module.exports.pair = function (socket) {
 			// Return an error
 			return throwError(callback);
 		}
+
+		temp_kettles = [];
 	});
 };
 
@@ -139,7 +141,7 @@ module.exports.capabilities = {
 		}
 	},
 
-	temperature: {
+	target_temperature: {
 		get: function (device_data, callback) {
 			if (device_data instanceof Error || !device_data.id) return callback(device_data);
 
@@ -288,11 +290,10 @@ function searchForKettles(callback) {
 	myKettles.discover(function (discoverSocket) {
 		discoverSocket.on('found_device', function (kettle) {
 			var id = generateDeviceID(kettle.kettle._host, "null");
-
 			var foundKettle = _.filter(preInstalledKettles, function (kettle) { return kettle.data.id == id; });
 
 			// Check if device was installed before
-			var devices = (foundKettle) ? kettles : temp_kettles;
+			var devices = (!_.isEmpty(foundKettle)) ? kettles : temp_kettles;
 
 			// Add kettle to array of found devices (for multiple devices support)
 			devices.push({
@@ -348,7 +349,7 @@ function updateKettleData(device) {
 			device.data.removed = true;
 
 			// Removed kettle from dock
-			module.exports.realtime({id: device.data.id}, 'removed', true);
+			Homey.manager('flow').trigger('removed');
 
 		}).on('overheat', function () {
 			device.data.overheat = true;
@@ -357,13 +358,13 @@ function updateKettleData(device) {
 			device.data.boiled = true;
 
 			// Boiling done
-			module.exports.realtime({data: {id: device.data.id}}, 'boiled', true);
+			Homey.manager('flow').trigger('boiled');
 
 		}).on('keep-warm-expired', function () {
 			device.data.keep_warm_expired = true;
 
 			// Keep warm done
-			module.exports.realtime({data: {id: device.data.id}}, 'keep_warm', false);
+			Homey.manager('flow').trigger('keep_warm');
 
 		}).on('boiling', function () {
 			device.data.boiling = true;
@@ -373,7 +374,7 @@ function updateKettleData(device) {
 			device.data.keep_warm = state;
 
 			// Keep warm done
-			module.exports.realtime({data: {id: device.data.id}}, 'keep_warm', true);
+			Homey.manager('flow').trigger('keep_warm');
 
 		}).on('temperature', function (temperature) {
 			device.data.temperature = temperature;

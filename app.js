@@ -5,38 +5,17 @@ var self = module.exports = {
 
 		// On kettle has boiled
 		Homey.manager('flow').on('trigger.boiled', function (callback, args) {
-
-			// Check if event triggered is equal keep_warm and if arg is set to false
-			if (typeof args === "object" && args.data === false) {
-				callback(true);
-			}
-			else {
-				callback(false);
-			}
+			callback(true);
 		});
 
 		// On kettle removed from dock
 		Homey.manager('flow').on('trigger.removed', function (callback, args) {
-
-			// Check if event triggered is equal keep_warm and if arg is set to false
-			if (typeof args === "object" && args.data === true) {
-				callback(true);
-			}
-			else {
-				callback(false);
-			}
+			callback(true);
 		});
 
 		// On keep_warm time expired
 		Homey.manager('flow').on('trigger.keep_warm', function (callback, args) {
-
-			// Check if event triggered is equal keep_warm and if arg is set to false
-			if (typeof args === "object" && args.data === false) {
-				callback(true);
-			}
-			else {
-				callback(false);
-			}
+			callback(true);
 		});
 
 		// When keeping warm
@@ -68,7 +47,7 @@ var self = module.exports = {
 					// If success and proper callback return success
 					if (!err && success) {
 						// Toggle temperature capability of ikettle
-						Homey.manager('drivers').getDriver('ikettle').capabilities.temperature.set(args.device, temperature, function (err, success) {
+						Homey.manager('drivers').getDriver('ikettle').capabilities.target_temperature.set(args.device, temperature, function (err, success) {
 
 							// If success and proper callback return success
 							if (!err && success) {
