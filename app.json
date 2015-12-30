@@ -67,8 +67,8 @@
       {
         "id": "removed",
         "title": {
-          "en": "Kettle has been undocked while heating",
-          "nl": "Waterkoker tijdens verwarmen van dock gehaald"
+          "en": "Kettle undocked while heating",
+          "nl": "Waterkoker verwijderd tijdens verwarmen"
         }
       },
       {
